@@ -1,6 +1,8 @@
 package modelo2doparcial;
 
-public class Main {
+import java.util.List;
+
+public class ModeloSP {
 
     public static void main(String[] args) {
 // CREAR BLIBLIOTECA (LIBRARY)
@@ -40,9 +42,9 @@ public class Main {
         for (Book book : library) {
             System.out.println(book);
         }
-    }
-    /*
-        // SERIALIZAR BINARIO
+        System.out.println("");
+        System.out.println("(serializaciones: )");
+// SERIALIZAR BINARIO
         if (library.writeBinary("libros.dat", library.getAll())) {
             System.out.println("Se serializó en binario");
         } else {
@@ -69,5 +71,4 @@ public class Main {
             System.out.println(book);
         }
     }
-     */
 }
