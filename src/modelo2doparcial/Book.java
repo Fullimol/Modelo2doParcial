@@ -1,6 +1,11 @@
 package modelo2doparcial;
 
-public class Book implements Comparable<Book> {
+//SIEMPRE hacerlo para permitir serializarlo a BYTES. Permite que los objetos de la clase Book sean convertidos a una secuencia de bytes.
+import java.io.Serializable; // (NO HACE FALTE PARA SERIALIZAR EN JSON).
+
+public class Book implements Comparable<Book>, Serializable {
+
+    private static final long serialVersionUID = 1L; // Identificador de versión para la serialización
 
     //atributos
     private String titulo;

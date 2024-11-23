@@ -66,17 +66,58 @@ public class Library implements Iterable<Book>, Serializer<Book> {
 
     //          **** SERIALIZACION ****
     @Override
+    public Book deserializeFromBinary(InputStream in) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream ois = new ObjectInputStream(in)) {
+            return (Book) ois.readObject();
+        }
+    }
+
+    @Override
     public void serializeToBinary(Book libro, OutputStream out) throws IOException {
         try (ObjectOutputStream oos = new ObjectOutputStream(out)) {
             oos.writeObject(libro);
         }
     }
 
-    @Override
-    public Book deserializeFromBinary(InputStream in) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream ois = new ObjectInputStream(in)) {
-            return (Book) ois.readObject();
+    // Método para guardar la biblioteca en un archivo binario 
+    // Con esto funciona en el main, pero NO estoy aprovechando usar serializeToBinary de la interfaz Serializer.
+    public boolean writeBinary(String nombreArchivo, List<Book> libros) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(nombreArchivo))) {
+            out.writeObject(libros);
+            System.out.println("Libros guardados en formato binario.");
+            return true;
+        } catch (IOException e) {
+            System.out.println("ERROR: " + e.getMessage());
+            return false;
         }
+    }
+
+    /*
+    //con esto aprovecho usar serializeToBinary de la interfaz Serializer, pero no funciona en el main.
+    public boolean writeBinary(String fileName, List<Book> books) {
+        try (OutputStream out = new FileOutputStream(fileName)) {
+            for (Book book : books) {
+                serializeToBinary(book, out);
+            }
+            System.out.println("Libros guardados en formato binario.");
+            return true;
+        } catch (Exception e) {
+            System.out.println("ERROR: " + e.getMessage());
+            return false;
+        }
+    }
+     */
+    // Método para leer la biblioteca desde un archivo binario 
+    public List<Book> readBinary(String nombreArchivo) {
+        List<Book> libros = new ArrayList<>();
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(nombreArchivo))) {
+            libros = (List<Book>) in.readObject();
+            System.out.println("Libros leidos desde formato binario.");
+            this.libros = libros;
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("ERROR: " + e.getMessage());
+        }
+        return libros;
     }
 
     @Override
@@ -89,40 +130,6 @@ public class Library implements Iterable<Book>, Serializer<Book> {
         return gson.fromJson(json, Book.class);
     }
 
-    // Método para guardar la biblioteca en un archivo binario 
-    public boolean writeBinary(String fileName, List<Book> books) {
-        try (OutputStream out = new FileOutputStream(fileName)) {
-            for (Book book : books) {
-                serializeToBinary(book, out);
-            }
-            System.out.println("Biblioteca guardada en formato binario.");
-            return true;
-        } catch (Exception e) {
-            System.out.println("ERROR: " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Método para leer la biblioteca desde un archivo binario 
-    public List<Book> readBinary(String fileName) {
-        List<Book> libros = new ArrayList<>();
-        try (InputStream in = new FileInputStream(fileName)) {
-            while (true) {
-                try {
-                    Book libro = deserializeFromBinary(in);
-                    libros.add(libro);
-                } catch (IOException | ClassNotFoundException e) {
-                    break;
-                }
-            }
-            System.out.println("Biblioteca leída desde formato binario.");
-            this.libros = libros;
-        } catch (IOException e) {
-            System.out.println("ERROR: " + e.getMessage());
-        }
-        return libros;
-    }
-
     // Método para guardar la biblioteca en un archivo JSON 
     public boolean writeJSON(String fileName, List<Book> libros) {
         try (Writer writer = new FileWriter(fileName)) {
@@ -131,7 +138,7 @@ public class Library implements Iterable<Book>, Serializer<Book> {
                 writer.write(json);
                 writer.write("\n");
             }
-            System.out.println("Biblioteca guardada en formato JSON.");
+            System.out.println("Libros guardados en formato JSON.");
             return true;
         } catch (IOException e) {
             System.out.println("ERROR: " + e.getMessage());
@@ -149,7 +156,7 @@ public class Library implements Iterable<Book>, Serializer<Book> {
                 Book libro = deserializeFromJson(line);
                 libros.add(libro);
             }
-            System.out.println("Biblioteca leída desde formato JSON.");
+            System.out.println("Libros leidos desde formato JSON.");
             this.libros = libros;
         } catch (IOException e) {
             System.out.println("ERROR: " + e.getMessage());
