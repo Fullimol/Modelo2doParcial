@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.io.InputStream;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -66,22 +67,19 @@ public class Library implements Iterable<Book>, Serializer<Book> {
 
     //          **** SERIALIZACION ****
     @Override
-    public Book deserializeFromBinary(InputStream in) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream ois = new ObjectInputStream(in)) {
-            return (Book) ois.readObject();
-        }
+    public Book deserializeFromBinary(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        // Deserializar sin cerrar el flujo
+        return (Book) ois.readObject();
     }
 
     @Override
-    public void serializeToBinary(Book libro, OutputStream out) throws IOException {
-        try (ObjectOutputStream oos = new ObjectOutputStream(out)) {
-            oos.writeObject(libro);
-        }
+    public void serializeToBinary(Book libro, ObjectOutputStream oos) throws IOException {
+        // Deserializar sin cerrar el flujo
+        oos.writeObject(libro);
     }
 
-    // Método para guardar la biblioteca en un archivo binario 
     // Con esto funciona en el main, pero NO estoy aprovechando usar serializeToBinary de la interfaz Serializer.
-    public boolean writeBinary(String nombreArchivo, List<Book> libros) {
+    public boolean writeBinaryf(String nombreArchivo, List<Book> libros) {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(nombreArchivo))) {
             out.writeObject(libros);
             System.out.println("Libros guardados en formato binario.");
@@ -92,12 +90,11 @@ public class Library implements Iterable<Book>, Serializer<Book> {
         }
     }
 
-    /*
     //con esto aprovecho usar serializeToBinary de la interfaz Serializer, pero no funciona en el main.
-    public boolean writeBinary(String fileName, List<Book> books) {
-        try (OutputStream out = new FileOutputStream(fileName)) {
-            for (Book book : books) {
-                serializeToBinary(book, out);
+    public boolean writeBinary(String nombreArchivo, List<Book> libros) {
+        try (FileOutputStream fos = new FileOutputStream(nombreArchivo); ObjectOutputStream out = new ObjectOutputStream(fos)) {
+            for (Book libro : libros) {
+                serializeToBinary(libro, out); // Serializa cada libro utilizando el método de la interfaz
             }
             System.out.println("Libros guardados en formato binario.");
             return true;
@@ -106,14 +103,20 @@ public class Library implements Iterable<Book>, Serializer<Book> {
             return false;
         }
     }
-     */
+
     // Método para leer la biblioteca desde un archivo binario 
     public List<Book> readBinary(String nombreArchivo) {
         List<Book> libros = new ArrayList<>();
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(nombreArchivo))) {
-            libros = (List<Book>) in.readObject();
-            System.out.println("Libros leidos desde formato binario.");
-            this.libros = libros;
+        try (FileInputStream fis = new FileInputStream(nombreArchivo); ObjectInputStream ois = new ObjectInputStream(fis)) { // Crear ObjectInputStream una vez
+            while (true) { // Leer hasta alcanzar el final del archivo
+                try {
+                    Book libro = deserializeFromBinary(ois); // Usar el método para deserializar un libro
+                    libros.add(libro); // Agregar el libro a la lista
+                } catch (EOFException e) {
+                    break; // Fin del archivo alcanzado
+                }
+            }
+            System.out.println("Libros leídos desde formato binario.");
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("ERROR: " + e.getMessage());
         }
