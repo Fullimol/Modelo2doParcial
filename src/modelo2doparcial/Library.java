@@ -67,15 +67,25 @@ public class Library implements Iterable<Book>, Serializer<Book> {
 
     //          **** SERIALIZACION ****
     @Override
+    public void serializeToBinary(Book libro, ObjectOutputStream oos) throws IOException {
+        // Deserializar sin cerrar el flujo
+        oos.writeObject(libro);
+    }
+
+    @Override
     public Book deserializeFromBinary(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         // Deserializar sin cerrar el flujo
         return (Book) ois.readObject();
     }
 
     @Override
-    public void serializeToBinary(Book libro, ObjectOutputStream oos) throws IOException {
-        // Deserializar sin cerrar el flujo
-        oos.writeObject(libro);
+    public String serializeToJson(Book libro) {
+        return gson.toJson(libro);
+    }
+
+    @Override
+    public Book deserializeFromJson(String json) {
+        return gson.fromJson(json, Book.class);
     }
 
     // Con esto funciona en el main, pero NO estoy aprovechando usar serializeToBinary de la interfaz Serializer.
@@ -121,16 +131,6 @@ public class Library implements Iterable<Book>, Serializer<Book> {
             System.out.println("ERROR: " + e.getMessage());
         }
         return libros;
-    }
-
-    @Override
-    public String serializeToJson(Book libro) {
-        return gson.toJson(libro);
-    }
-
-    @Override
-    public Book deserializeFromJson(String json) {
-        return gson.fromJson(json, Book.class);
     }
 
     // Método para guardar la biblioteca en un archivo JSON 
